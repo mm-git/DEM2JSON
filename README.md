@@ -25,11 +25,11 @@ Javascriptで緯度経度から標高を取得するスクリプト用の標高�
 
 MinGW上のgccでコンパイルできていることを確認しています。
 その他の環境については未確認です。
-ビルドには[zlib]  [minizip]  [boost]ライブラリが必要です。
+ビルドには[zlib]、[boost]、[minizip]ライブラリが必要です。
 
-  [zlib]: http://zlib.net/
+  [zlib]: http://zlib.net
+  [boost]: http://www.boost.org
   [minizip]: http://www.winimage.com/zLibDll/minizip.html
-  [boost]: http://www.boost.org/
 
 フォルダ構造:
 
