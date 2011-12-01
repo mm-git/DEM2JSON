@@ -208,7 +208,7 @@ bool DEMMatrix::writeArea(std::string& outputFolder)
 		return false;
 	}
 
-	outStream << "{'a' : [" << std::endl;
+	outStream << "{\"a\" : [" << std::endl;
 	for(long i=0; i<180; i++){
 		std::string lineString = "\"";
 		unsigned char shift = 0x80;

@@ -175,7 +175,7 @@ bool AltitudeMatrix::writeJSON(std::string& outputFolder)
 			if(!outStream){
 				return false;
 			}
-			outStream << "{'h' : [" << std::endl;
+			outStream << "{\"h\" : [" << std::endl;
 
 			for(long i=0; i<MATRIX_SIZE/3; i++){
 				short previous = 0;
