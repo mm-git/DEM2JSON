@@ -151,7 +151,7 @@ void AltitudeMatrix::verify(Matrix<short > *pOrgMatrix)
 			short resultAltitude = smoothing ? matrix[eResult][i][j] : masterMatrix.getMatrixValue(j, i);
 
 			if(abs(orgAltitude - resultAltitude) > HEIGHT_THRESHOLD && resultAltitude==0 && orgAltitude>0){
-				std::cout << baseFileName << " x=" << (j-2) << " y=" << (i-2) << " org=" << orgAltitude << " smooth=" << matrix[eResult][i][j] << std::endl;
+				std::cout << baseFileName << " x=" << (j-2) << " y=" << (i-2) << " org=" << orgAltitude << " smooth=" << resultAltitude << std::endl;
 				if(smoothing){
 					matrix[eResult][i][j] = orgAltitude;
 				}
