@@ -24,7 +24,11 @@ int main(int argc, char* argv[])
 	try {
 		DEMMatrix* pDEM = new DEMMatrix();
 		pDEM->readDEMFolder(pParam->getInputPath());
-		pDEM->convertToJson(pParam->getInputPath(), pParam->getOutputPath(), pParam->isSmoothing());
+		pDEM->convertToJson(
+			pParam->getInputPath(),
+			pParam->getOutputPath(),
+			pParam->isSmoothing(),
+			pParam->isFullConvert());
 		pDEM->writeArea(pParam->getOutputPath());
 		
 		delete pDEM;

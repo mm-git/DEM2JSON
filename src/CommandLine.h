@@ -22,6 +22,7 @@ private:
 	std::string				inputPath;
 	std::string				outputPath;
 	bool					smoothing;
+	bool					fullConvert;
 
 public:
 	static CommandLine* getInstance(){
@@ -53,12 +54,17 @@ public:
 		return smoothing;
 	};
 
+	bool isFullConvert(){
+		return fullConvert;
+	}
+
 	void help();
 
 private:
 	bool setInputPath(const char* value);
 	bool setOutputPath(const char* value);
 	bool setSmoothing(const char* value);
+	bool setFullConvert(const char* value);
 };
 
 #endif /* COMMANDLINE_H_ */

@@ -10,7 +10,7 @@
 #include <boost/format.hpp>
 #include <cctype>
 #include <fstream>
-#include "zlib.h"
+#include <zlib.h>
 #include "unzip.h"
 
 DEMMatrix::DEMMatrix() {
@@ -78,7 +78,8 @@ bool DEMMatrix::readDEMFolder(std::string& inputFolder) {
 bool DEMMatrix::convertToJson(
 	std::string&	inputFolder,
 	std::string&	outputFolder,
-	bool			smoothing)
+	bool			smoothing,
+	bool			fullConvert)
 {
 	long i;
 	long j;
@@ -95,94 +96,74 @@ bool DEMMatrix::convertToJson(
 	for(i=0; i<180; i++){
 		for(j=0; j<360; j++){
 			try{
+				if(demFileMatrix[i][j].fileName == ""){
+					continue;
+				}
+				if(!fullConvert && isExistOutput(outputFolder, demFileMatrix[i][j].fileName)){
+					continue;
+				}
+
+
 				if(smoothing){
-					if(demFileMatrix[i][j].fileName != ""){
-						j1 = (j == 0 ? 359 : j-1);
-						j2 = j;
-						j3 = (j == 359 ? 0 : j+1);
+					j1 = (j == 0 ? 359 : j-1);
+					j2 = j;
+					j3 = (j == 359 ? 0 : j+1);
 
-						Unzip(inputFolder, demFileMatrix[i-1][j1].fileName, tempFolder);
-						Unzip(inputFolder, demFileMatrix[i-1][j2].fileName, tempFolder);
-						Unzip(inputFolder, demFileMatrix[i-1][j3].fileName, tempFolder);
-						Unzip(inputFolder, demFileMatrix[i][j1].fileName, tempFolder);
-						Unzip(inputFolder, demFileMatrix[i][j2].fileName, tempFolder);
-						Unzip(inputFolder, demFileMatrix[i][j3].fileName, tempFolder);
-						Unzip(inputFolder, demFileMatrix[i+1][j1].fileName, tempFolder);
-						Unzip(inputFolder, demFileMatrix[i+1][j2].fileName, tempFolder);
-						Unzip(inputFolder, demFileMatrix[i+1][j3].fileName, tempFolder);
+					Unzip(inputFolder, demFileMatrix[i-1][j1].fileName, tempFolder);
+					Unzip(inputFolder, demFileMatrix[i-1][j2].fileName, tempFolder);
+					Unzip(inputFolder, demFileMatrix[i-1][j3].fileName, tempFolder);
+					Unzip(inputFolder, demFileMatrix[i][j1].fileName, tempFolder);
+					Unzip(inputFolder, demFileMatrix[i][j2].fileName, tempFolder);
+					Unzip(inputFolder, demFileMatrix[i][j3].fileName, tempFolder);
+					Unzip(inputFolder, demFileMatrix[i+1][j1].fileName, tempFolder);
+					Unzip(inputFolder, demFileMatrix[i+1][j2].fileName, tempFolder);
+					Unzip(inputFolder, demFileMatrix[i+1][j3].fileName, tempFolder);
 
-						if(demFileMatrix[i][j2].fileName != ""){
-							TIF(demFileMatrix[i-1][j1]);
-							TIF(demFileMatrix[i-1][j2]);
-							TIF(demFileMatrix[i-1][j3]);
-							TIF(demFileMatrix[i][j1]);
-							TIF(demFileMatrix[i][j2]);
-							TIF(demFileMatrix[i][j3]);
-							TIF(demFileMatrix[i+1][j1]);
-							TIF(demFileMatrix[i+1][j2]);
-							TIF(demFileMatrix[i+1][j3]);
+					if(demFileMatrix[i][j2].fileName != ""){
+						TIF(demFileMatrix[i-1][j1]);
+						TIF(demFileMatrix[i-1][j2]);
+						TIF(demFileMatrix[i-1][j3]);
+						TIF(demFileMatrix[i][j1]);
+						TIF(demFileMatrix[i][j2]);
+						TIF(demFileMatrix[i][j3]);
+						TIF(demFileMatrix[i+1][j1]);
+						TIF(demFileMatrix[i+1][j2]);
+						TIF(demFileMatrix[i+1][j3]);
 
-							pAltitude->setDEMMatrix(
-								demFileMatrix[i-1][j1].pTiffData->getMiniMatrix(),
-								demFileMatrix[i-1][j2].pTiffData->getMiniMatrix(),
-								demFileMatrix[i-1][j3].pTiffData->getMiniMatrix(),
-								demFileMatrix[i][j1].pTiffData->getMiniMatrix(),
-								demFileMatrix[i][j2].pTiffData->getMiniMatrix(),
-								demFileMatrix[i][j3].pTiffData->getMiniMatrix(),
-								demFileMatrix[i+1][j1].pTiffData->getMiniMatrix(),
-								demFileMatrix[i+1][j2].pTiffData->getMiniMatrix(),
-								demFileMatrix[i+1][j3].pTiffData->getMiniMatrix()
-							);
-							pAltitude->doSmoothing();
-							pAltitude->setBaseFile(demFileMatrix[i][j].fileName);
-							pAltitude->verify(demFileMatrix[i][j2].pTiffData->getMatrix());
-							pAltitude->writeJSON(outputFolder);
-						}
-
-						DELETE_POINTER(demFileMatrix[i-1][j1].pTiffData);
-						DELETE_POINTER(demFileMatrix[i][j1].pTiffData);
-						DELETE_POINTER(demFileMatrix[i+1][j1].pTiffData);
-						if(j == 359){
-							DELETE_POINTER(demFileMatrix[i-1][j2].pTiffData);
-							DELETE_POINTER(demFileMatrix[i][j2].pTiffData);
-							DELETE_POINTER(demFileMatrix[i+1][j2].pTiffData);
-							DELETE_POINTER(demFileMatrix[i-1][j3].pTiffData);
-							DELETE_POINTER(demFileMatrix[i][j3].pTiffData);
-							DELETE_POINTER(demFileMatrix[i+1][j3].pTiffData);
-						}
-						else{
-							if(j == 358 && demFileMatrix[i][j3].fileName == ""){
-									DELETE_POINTER(demFileMatrix[i-1][j2].pTiffData);
-									DELETE_POINTER(demFileMatrix[i][j2].pTiffData);
-									DELETE_POINTER(demFileMatrix[i+1][j2].pTiffData);
-									DELETE_POINTER(demFileMatrix[i-1][j3].pTiffData);
-									DELETE_POINTER(demFileMatrix[i][j3].pTiffData);
-									DELETE_POINTER(demFileMatrix[i+1][j3].pTiffData);
-							}
-							else{
-								if(demFileMatrix[i][j3].fileName == ""){
-									DELETE_POINTER(demFileMatrix[i-1][j2].pTiffData);
-									DELETE_POINTER(demFileMatrix[i][j2].pTiffData);
-									DELETE_POINTER(demFileMatrix[i+1][j2].pTiffData);
-									if(demFileMatrix[i][j+2].fileName == ""){
-										DELETE_POINTER(demFileMatrix[i-1][j3].pTiffData);
-										DELETE_POINTER(demFileMatrix[i][j3].pTiffData);
-										DELETE_POINTER(demFileMatrix[i+1][j3].pTiffData);
-									}
-								}
-							}
-						}
+						pAltitude->setDEMMatrix(
+							demFileMatrix[i-1][j1].pTiffData->getMiniMatrix(),
+							demFileMatrix[i-1][j2].pTiffData->getMiniMatrix(),
+							demFileMatrix[i-1][j3].pTiffData->getMiniMatrix(),
+							demFileMatrix[i][j1].pTiffData->getMiniMatrix(),
+							demFileMatrix[i][j2].pTiffData->getMiniMatrix(),
+							demFileMatrix[i][j3].pTiffData->getMiniMatrix(),
+							demFileMatrix[i+1][j1].pTiffData->getMiniMatrix(),
+							demFileMatrix[i+1][j2].pTiffData->getMiniMatrix(),
+							demFileMatrix[i+1][j3].pTiffData->getMiniMatrix()
+						);
+						pAltitude->doSmoothing();
+						pAltitude->setBaseFile(demFileMatrix[i][j].fileName);
+						pAltitude->verify(demFileMatrix[i][j2].pTiffData->getMatrix());
+						pAltitude->writeJSON(outputFolder);
 					}
+
+					DELETE_POINTER(demFileMatrix[i-1][j1].pTiffData);
+					DELETE_POINTER(demFileMatrix[i][j1].pTiffData);
+					DELETE_POINTER(demFileMatrix[i+1][j1].pTiffData);
+					DELETE_POINTER(demFileMatrix[i-1][j2].pTiffData);
+					DELETE_POINTER(demFileMatrix[i][j2].pTiffData);
+					DELETE_POINTER(demFileMatrix[i+1][j2].pTiffData);
+					DELETE_POINTER(demFileMatrix[i-1][j3].pTiffData);
+					DELETE_POINTER(demFileMatrix[i][j3].pTiffData);
+					DELETE_POINTER(demFileMatrix[i+1][j3].pTiffData);
 				}
 				else{
-					if(demFileMatrix[i][j].fileName != ""){
-						if(Unzip(inputFolder, demFileMatrix[i][j].fileName, tempFolder)){
-							TIF(demFileMatrix[i][j]);
-							pAltitude->setDEMMatrix(demFileMatrix[i][j].pTiffData->getMiniMatrix());
-							pAltitude->setBaseFile(demFileMatrix[i][j].fileName);
-							pAltitude->writeJSON(outputFolder);
-							DELETE_POINTER(demFileMatrix[i][j].pTiffData);
-						}
+					if(Unzip(inputFolder, demFileMatrix[i][j].fileName, tempFolder)){
+						TIF(demFileMatrix[i][j]);
+						pAltitude->setDEMMatrix(demFileMatrix[i][j].pTiffData->getMiniMatrix());
+						pAltitude->setBaseFile(demFileMatrix[i][j].fileName);
+						pAltitude->writeJSON(outputFolder);
+						DELETE_POINTER(demFileMatrix[i][j].pTiffData);
 					}
 				}
 			}
@@ -240,7 +221,10 @@ bool DEMMatrix::writeArea(std::string& outputFolder)
 	return true;
 }
 
-bool DEMMatrix::Unzip(std::string& inputFolder, std::string& demFile, std::string& target)
+bool DEMMatrix::Unzip(
+	std::string& inputFolder,
+	std::string& demFile,
+	std::string& target)
 {
 	if(demFile == ""){
 		return false;
@@ -306,5 +290,18 @@ bool DEMMatrix::Unzip(std::string& inputFolder, std::string& demFile, std::strin
 	return true;
 }
 
+bool DEMMatrix::isExistOutput(
+	std::string& outputFolder,
+	std::string& demFile)
+{
+	std::string outputFileName = boost::filesystem::path(demFile).stem().generic_string();
 
+	long latPos = outputFileName.find("_");
+	outputFileName = outputFolder + outputFileName.substr(latPos+1, 7) + std::string("M00.json");
 
+	if(boost::filesystem::exists(boost::filesystem::path(outputFileName))){
+		return true;
+	}
+
+	return false;
+}

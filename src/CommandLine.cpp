@@ -13,6 +13,7 @@ CommandLine::CommandLine() {
 	inputPath = "";
 	outputPath = "";
 	smoothing = false;
+	fullConvert = false;
 }
 
 CommandLine::~CommandLine() {
@@ -32,6 +33,7 @@ bool CommandLine::parse(
 		{"-D",    true,  true,  false, &CommandLine::setInputPath},
 		{"-J",    true,  true,  false, &CommandLine::setOutputPath},
 		{"-S",    false, false, false, &CommandLine::setSmoothing},
+		{"-F",    false, false, false, &CommandLine::setFullConvert},
 		{"-H",    false, false, true,  0},
 		{"-HELP", false, false, true,  0},
 		{"", false, 0}
@@ -130,6 +132,11 @@ bool CommandLine::setSmoothing(const char* value){
 	return true;
 };
 
+bool CommandLine::setFullConvert(const char* value){
+	fullConvert = true;
+	return true;
+};
+
 void CommandLine::help()
 {
 	std::cout << std::endl ;
@@ -139,5 +146,6 @@ void CommandLine::help()
 	std::cout << "    -D            ASTER DEM data folder (input folder)" << std::endl ;
 	std::cout << "    -J            JSON data folder (output folder)" << std::endl ;
 	std::cout << "    -S            Output JSON data is smoothed.(optional)" << std::endl ;
+	std::cout << "    -F            To convert all data.(optional)" << std::endl ;
 	std::cout << std::endl ;
 }

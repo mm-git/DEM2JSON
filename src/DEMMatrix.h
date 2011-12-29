@@ -28,13 +28,16 @@ public:
 	bool readDEMFolder(std::string&		inputFolder);
 	bool convertToJson(std::string&		inputFolder,
 					   std::string&		outputFolder,
-					   bool				smoothing);
+					   bool				smoothing,
+					   bool				fullConvert);
 	bool writeArea(std::string&			outputFolder);
 
 private:
 	bool Unzip(std::string&				inputFolder,
 			   std::string&				demFile,
 			   std::string&				target);
+	bool isExistOutput(std::string&		outputFolder,
+					   std::string&		demFile);
 };
 
 #endif /* DEMMATRIX_H_ */

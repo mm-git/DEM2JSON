@@ -41,11 +41,11 @@
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.mingw.exe.debug.418383792" name="MinGW C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.mingw.exe.debug"/>
 							<tool command="g++" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GLDErrorParser" id="cdt.managedbuild.tool.gnu.cpp.linker.mingw.exe.debug.1033166430" name="MinGW C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.mingw.exe.debug">
 								<option id="gnu.cpp.link.option.flags.1638215817" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-static-libgcc -static-libstdc++" valueType="string"/>
-								<option id="gnu.cpp.link.option.paths.1589230814" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
+								<option id="gnu.cpp.link.option.paths.1589230814" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;C:\boost\stage\x64\lib&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;C:\MinGW\x86_64-w64-mingw32\lib&quot;"/>
 								</option>
-								<option id="gnu.cpp.link.option.libs.2136378666" superClass="gnu.cpp.link.option.libs" valueType="libs">
+								<option id="gnu.cpp.link.option.libs.2136378666" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="z"/>
 									<listOptionValue builtIn="false" value="boost_filesystem-mgw47-mt-d-1_47"/>
 									<listOptionValue builtIn="false" value="boost_system-mgw47-mt-d-1_47"/>
@@ -95,6 +95,7 @@
 								<option id="gnu.cpp.compiler.mingw.exe.release.option.debugging.level.470902852" name="Debug Level" superClass="gnu.cpp.compiler.mingw.exe.release.option.debugging.level" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.554263755" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;C:\boost&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;C:\MinGW\x86_64-w64-mingw32\include&quot;"/>
 									<listOptionValue builtIn="false" value="../minizip/"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.250626064" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
