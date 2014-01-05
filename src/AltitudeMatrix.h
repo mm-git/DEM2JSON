@@ -10,8 +10,6 @@
 #include "CommonInclude.h"
 #include "Matrix.h"
 
-#define MATRIX_SIZE 1200
-
 class AltitudeMatrix {
 public:
 	AltitudeMatrix();
@@ -27,10 +25,11 @@ private:
 		eResult,
 		eMaxTypeNum,
 	};
-	Matrix<short> masterMatrix;
-	long matrix[eMaxTypeNum][MATRIX_SIZE+4][MATRIX_SIZE+4];
-	bool smoothing;
-	std::string baseFileName;
+	Matrix<short>   masterMatrix;
+	long            matrix[eMaxTypeNum][MATRIX_SIZE+4][MATRIX_SIZE+4];
+	unsigned long   smoothingCount;
+    long            dctRadius;
+	std::string     baseFileName;
 
 public:
 	void clear();
@@ -38,9 +37,12 @@ public:
 					  Matrix<short>* pMatrix21, Matrix<short>* pMatrix22, Matrix<short>* pMatrix23,
 					  Matrix<short>* pMatrix31, Matrix<short>* pMatrix32, Matrix<short>* pMatrix33);
 	bool setDEMMatrix(Matrix<short>* pDemMatrix);
-	void doSmoothing();
+	void doSmoothing(unsigned long smooothingCount,
+                     bool afterDct = false);
+    void doDCT(long dctRadius);
 	bool setBaseFile(std::string& demFileName);
 	void verify(Matrix<short>* pOrgMatrix);
+    void compare();
 	bool writeJSON(std::string& outputFolder);
 
 private:

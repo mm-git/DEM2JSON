@@ -18,5 +18,6 @@
 #define TEMP_FOLDER "./temp/"
 #define AREA_FILE "area.json"
 #define HEIGHT_THRESHOLD 20
+#define MATRIX_SIZE 1200
 
 #endif /* COMMONINCLUDE_H_ */

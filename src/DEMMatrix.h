@@ -28,7 +28,8 @@ public:
 	bool readDEMFolder(std::string&		inputFolder);
 	bool convertToJson(std::string&		inputFolder,
 					   std::string&		outputFolder,
-					   bool				smoothing,
+					   unsigned long		smoothingCount,
+                       long             dctRadius,
 					   bool				fullConvert);
 	bool writeArea(std::string&			outputFolder);
 

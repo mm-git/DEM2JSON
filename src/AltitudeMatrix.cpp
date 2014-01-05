@@ -6,6 +6,7 @@
 //============================================================================
 #include "AltitudeMatrix.h"
 #include "GeoTiffReader.h"
+#include "Dct.h"
 #include <boost/format.hpp>
 #include <cctype>
 #include <fstream>
@@ -13,7 +14,8 @@
 AltitudeMatrix::AltitudeMatrix() {
 	masterMatrix.init(MATRIX_SIZE+4, MATRIX_SIZE+4);
 	memset(matrix, 0, sizeof(matrix));
-	smoothing = false;
+	smoothingCount = 0;
+    dctRadius = -1;
 	baseFileName = "";
 }
 
@@ -25,7 +27,7 @@ void AltitudeMatrix::clear()
 {
 	masterMatrix.init(MATRIX_SIZE+4, MATRIX_SIZE+4);
 	memset(matrix, 0, sizeof(matrix));
-	smoothing = false;
+	smoothingCount = 0;
 }
 
 bool AltitudeMatrix::setDEMMatrix(
@@ -103,35 +105,66 @@ bool AltitudeMatrix::setDEMMatrix(Matrix<short>* pDemMatrix)
 	return true;
 }
 
-void AltitudeMatrix::doSmoothing() {
+void AltitudeMatrix::doSmoothing(unsigned long smoothingCount,
+                                 bool afterDct)
+{
 	long i;
 	long j;
 
-	std::cout << "Smoothing ..." << std::endl;
+    for(long repeat=0; repeat<smoothingCount; repeat++){
+        std::cout << "Smoothing ..." << (repeat+1) << std::endl;
 
-	for(i=0; i<MATRIX_SIZE+4; i++){
-		for(j=0; j<MATRIX_SIZE+4; j++){
-			matrix[eFactor4][i][j] = (long)masterMatrix.getMatrixValue(j, i) * 4;
-			matrix[eFactor6][i][j] = (long)masterMatrix.getMatrixValue(j, i) * 6;
-			matrix[eFactor16][i][j] = (long)masterMatrix.getMatrixValue(j, i) * 16;
-			matrix[eFactor24][i][j] = (long)masterMatrix.getMatrixValue(j, i) * 24;
-			matrix[eFactor36][i][j] = (long)masterMatrix.getMatrixValue(j, i) * 36;
-		}
-	}
+        for(i=0; i<MATRIX_SIZE+4; i++){
+            for(j=0; j<MATRIX_SIZE+4; j++){
+                if(repeat == 0 && afterDct != false){
+                    matrix[eFactor4][i][j] = (long)masterMatrix.getMatrixValue(j, i) * 4;
+                    matrix[eFactor6][i][j] = (long)masterMatrix.getMatrixValue(j, i) * 6;
+                    matrix[eFactor16][i][j] = (long)masterMatrix.getMatrixValue(j, i) * 16;
+                    matrix[eFactor24][i][j] = (long)masterMatrix.getMatrixValue(j, i) * 24;
+                    matrix[eFactor36][i][j] = (long)masterMatrix.getMatrixValue(j, i) * 36;
+                }
+                else{
+                    if(i>=2 && i<=MATRIX_SIZE+2 && j>=2 && j<=MATRIX_SIZE+2){
+                        matrix[eFactor4][i][j] = matrix[eResult][i][j] * 4;
+                        matrix[eFactor6][i][j] = matrix[eResult][i][j] * 6;
+                        matrix[eFactor16][i][j] = matrix[eResult][i][j] * 16;
+                        matrix[eFactor24][i][j] = matrix[eResult][i][j] * 24;
+                        matrix[eFactor36][i][j] = matrix[eResult][i][j] * 36;
+                    }
+                    else if(repeat == 0){
+                        matrix[eFactor4][i][j] = (long)masterMatrix.getMatrixValue(j, i) * 4;
+                        matrix[eFactor6][i][j] = (long)masterMatrix.getMatrixValue(j, i) * 6;
+                        matrix[eFactor16][i][j] = (long)masterMatrix.getMatrixValue(j, i) * 16;
+                        matrix[eFactor24][i][j] = (long)masterMatrix.getMatrixValue(j, i) * 24;
+                        matrix[eFactor36][i][j] = (long)masterMatrix.getMatrixValue(j, i) * 36;
+                    }
+                }
+            }
+        }
 
-	for(i=2; i<MATRIX_SIZE+2; i++){
-		for(j=2; j<MATRIX_SIZE+2; j++){
-			matrix[eResult][i][j] =
-				(((long)masterMatrix.getMatrixValue(j-2, i-2) + matrix[eFactor4][i-1][j-2]  + matrix[eFactor6][i][j-2]  + matrix[eFactor4][i+1][j-2]  + (long)masterMatrix.getMatrixValue(j-2,i+2) +
-				  matrix[eFactor4][i-2][j-1]                  + matrix[eFactor16][i-1][j-1] + matrix[eFactor24][i][j-1] + matrix[eFactor16][i+1][j-1] + matrix[eFactor4][i+2][j-1] +
-				  matrix[eFactor6][i-2][j]                    + matrix[eFactor24][i-1][j]   + matrix[eFactor36][i][j]   + matrix[eFactor24][i+1][j]   + matrix[eFactor6][i+2][j] +
-				  matrix[eFactor4][i-2][j+1]                  + matrix[eFactor16][i-1][j+1] + matrix[eFactor24][i][j+1] + matrix[eFactor16][i+1][j+1] + matrix[eFactor4][i+2][j+1] +
-				  (long)masterMatrix.getMatrixValue(j+2, i-2) + matrix[eFactor4][i-1][j+2]  + matrix[eFactor6][i][j+2]  + matrix[eFactor4][i+1][j+2]  + (long)masterMatrix.getMatrixValue(j+2,i+2))
-				/ 256);
-		}
-	}
+        for(i=2; i<MATRIX_SIZE+2; i++){
+            for(j=2; j<MATRIX_SIZE+2; j++){
+                matrix[eResult][i][j] =
+                    (((long)masterMatrix.getMatrixValue(j-2, i-2) + matrix[eFactor4][i-1][j-2]  + matrix[eFactor6][i][j-2]  + matrix[eFactor4][i+1][j-2]  + (long)masterMatrix.getMatrixValue(j-2,i+2) +
+                      matrix[eFactor4][i-2][j-1]                  + matrix[eFactor16][i-1][j-1] + matrix[eFactor24][i][j-1] + matrix[eFactor16][i+1][j-1] + matrix[eFactor4][i+2][j-1] +
+                      matrix[eFactor6][i-2][j]                    + matrix[eFactor24][i-1][j]   + matrix[eFactor36][i][j]   + matrix[eFactor24][i+1][j]   + matrix[eFactor6][i+2][j] +
+                      matrix[eFactor4][i-2][j+1]                  + matrix[eFactor16][i-1][j+1] + matrix[eFactor24][i][j+1] + matrix[eFactor16][i+1][j+1] + matrix[eFactor4][i+2][j+1] +
+                      (long)masterMatrix.getMatrixValue(j+2, i-2) + matrix[eFactor4][i-1][j+2]  + matrix[eFactor6][i][j+2]  + matrix[eFactor4][i+1][j+2]  + (long)masterMatrix.getMatrixValue(j+2,i+2))
+                     / 256);
+            }
+        }
+    }
 
-	smoothing = true;
+	this->smoothingCount = smoothingCount;
+}
+
+void AltitudeMatrix::doDCT(long dctRadius)
+{
+    Dct dct;
+    
+    dct.doDCT(&masterMatrix, matrix[eResult], dctRadius);
+    
+    this->dctRadius = dctRadius;
 }
 
 bool AltitudeMatrix::setBaseFile(std::string & demFileName)
@@ -148,11 +181,11 @@ void AltitudeMatrix::verify(Matrix<short > *pOrgMatrix)
 	for(long i=2; i<MATRIX_SIZE+2; i++){
 		for(long j=2; j<MATRIX_SIZE+2; j++){
 			short orgAltitude = pOrgMatrix->getMatrixValue((j-2)*3, (i-2)*3);
-			short resultAltitude = smoothing ? matrix[eResult][i][j] : masterMatrix.getMatrixValue(j, i);
+			short resultAltitude = smoothingCount>0 ? matrix[eResult][i][j] : masterMatrix.getMatrixValue(j, i);
 
 			if(abs(orgAltitude - resultAltitude) > HEIGHT_THRESHOLD && resultAltitude==0 && orgAltitude>0){
 				std::cout << baseFileName << " x=" << (j-2) << " y=" << (i-2) << " org=" << orgAltitude << " smooth=" << resultAltitude << std::endl;
-				if(smoothing){
+				if(smoothingCount > 0){
 					matrix[eResult][i][j] = orgAltitude;
 				}
 				else{
@@ -163,10 +196,28 @@ void AltitudeMatrix::verify(Matrix<short > *pOrgMatrix)
 	}
 }
 
+void AltitudeMatrix::compare()
+{
+    long totalChange = 0;
+	
+    for(long i=2; i<MATRIX_SIZE+2; i++){
+		for(long j=2; j<MATRIX_SIZE+2; j++){
+			long orgAltitude = (long)masterMatrix.getMatrixValue(j, i);
+			long resultAltitude = matrix[eResult][i][j];
+            totalChange += abs((int)orgAltitude - (int)resultAltitude);
+        }
+    }
+    double ratio = totalChange / (MATRIX_SIZE * MATRIX_SIZE);
+
+    std::cout << "change ratio=" << ratio << std::endl;
+}
+
 bool AltitudeMatrix::writeJSON(std::string& outputFolder)
 {
 	std::cout << "Writing " << baseFileName << " ..." <<std::endl;
 
+    boost::filesystem::create_directories(boost::filesystem::path(outputFolder));
+    
 	for(long k=0; k<3; k++){
 		for(long l=0; l<3; l++){
 			std::string outputFileName = outputFolder + baseFileName + (boost::format("M%1%%2%.json") % k % l).str();
@@ -186,7 +237,7 @@ bool AltitudeMatrix::writeJSON(std::string& outputFolder)
 
 				for(long j=0; j<MATRIX_SIZE/3; j++){
 					short current;
-					if(smoothing){
+					if(smoothingCount > 0 || dctRadius >= 0){
 						current = matrix[eResult][(3-k)*(MATRIX_SIZE/3)-i+1][l*MATRIX_SIZE/3+j+2];
 					}
 					else{

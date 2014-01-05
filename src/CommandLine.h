@@ -21,7 +21,8 @@ private:
 	static CommandLine*		pInstance;
 	std::string				inputPath;
 	std::string				outputPath;
-	bool					smoothing;
+	unsigned long           smoothingCount;
+    long                    dctRadius;      // -1 means not to do DCT
 	bool					fullConvert;
 
 public:
@@ -50,10 +51,14 @@ public:
 		return outputPath;
 	};
 
-	bool isSmoothing(){
-		return smoothing;
+	unsigned long getSmoothingCount(){
+		return smoothingCount;
 	};
 
+    long getDCTRadius(){
+        return dctRadius;
+    };
+    
 	bool isFullConvert(){
 		return fullConvert;
 	}
@@ -63,7 +68,8 @@ public:
 private:
 	bool setInputPath(const char* value);
 	bool setOutputPath(const char* value);
-	bool setSmoothing(const char* value);
+	bool setSmoothingCount(const char* value);
+    bool setDCTRadius(const char* value);
 	bool setFullConvert(const char* value);
 };
 

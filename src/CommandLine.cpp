@@ -12,7 +12,8 @@ CommandLine* CommandLine::pInstance = 0;
 CommandLine::CommandLine() {
 	inputPath = "";
 	outputPath = "";
-	smoothing = false;
+	smoothingCount = 0;
+    dctRadius = -1;
 	fullConvert = false;
 }
 
@@ -32,7 +33,8 @@ bool CommandLine::parse(
 	} arglist[] = {
 		{"-D",    true,  true,  false, &CommandLine::setInputPath},
 		{"-J",    true,  true,  false, &CommandLine::setOutputPath},
-		{"-S",    false, false, false, &CommandLine::setSmoothing},
+		{"-S",    true,  false, false, &CommandLine::setSmoothingCount},
+		{"-C",    true,  false, false, &CommandLine::setDCTRadius},
 		{"-F",    false, false, false, &CommandLine::setFullConvert},
 		{"-H",    false, false, true,  0},
 		{"-HELP", false, false, true,  0},
@@ -50,7 +52,7 @@ bool CommandLine::parse(
 				return false;
 			}
 
-			if(stricmp(argv[i], pArglist->parameter) == 0){
+			if(strcmp(argv[i], pArglist->parameter) == 0){
 				if(pArglist->help){
 					help();
 					return false;
@@ -127,10 +129,33 @@ bool CommandLine::setOutputPath(const char* value){
 	return true;
 };
 
-bool CommandLine::setSmoothing(const char* value){
-	smoothing = true;
+bool CommandLine::setSmoothingCount(const char* value){
+    size_t len = strlen(value);
+    
+    for(int i=0; i<len; i++){
+        if(value[i] < '0' || value[i] > '9'){
+			std::cout << "[ERROR] '-S' parameter is not decimal." << std::endl;
+            return false;
+        }
+    }
+	
+    smoothingCount = atoi(value);
 	return true;
 };
+
+bool CommandLine::setDCTRadius(const char* value){
+    size_t len = strlen(value);
+    
+    for(int i=0; i<len; i++){
+        if(value[i] < '0' || value[i] > '9'){
+			std::cout << "[ERROR] '-C' parameter is not decimal." << std::endl;
+            return false;
+        }
+    }
+
+    dctRadius = atoi(value);
+    return true;
+}
 
 bool CommandLine::setFullConvert(const char* value){
 	fullConvert = true;
@@ -145,7 +170,10 @@ void CommandLine::help()
 	std::cout << "    -H  --help    Prints this help " << std::endl;
 	std::cout << "    -D            ASTER DEM data folder (input folder)" << std::endl ;
 	std::cout << "    -J            JSON data folder (output folder)" << std::endl ;
-	std::cout << "    -S            Output JSON data is smoothed.(optional)" << std::endl ;
+	std::cout << "    -S n          Make a output JSON data smoothed by moving average method.(optional)" << std::endl ;
+	std::cout << "                  n is the number of smoothing executions." << std::endl ;
+	std::cout << "    -C r          Make a output JSON data smoothed by DCT.(optional)" << std::endl ;
+	std::cout << "                  r is the radius of low pass filter." << std::endl ;
 	std::cout << "    -F            To convert all data.(optional)" << std::endl ;
 	std::cout << std::endl ;
 }

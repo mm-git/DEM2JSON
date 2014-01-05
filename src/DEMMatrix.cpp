@@ -7,6 +7,7 @@
 //============================================================================
 #include "DEMMatrix.h"
 #include "AltitudeMatrix.h"
+#include "Dct.h"
 #include <boost/format.hpp>
 #include <cctype>
 #include <fstream>
@@ -78,7 +79,8 @@ bool DEMMatrix::readDEMFolder(std::string& inputFolder) {
 bool DEMMatrix::convertToJson(
 	std::string&	inputFolder,
 	std::string&	outputFolder,
-	bool			smoothing,
+	unsigned long	smoothingCount,
+    long            dctRadius,
 	bool			fullConvert)
 {
 	long i;
@@ -92,6 +94,10 @@ bool DEMMatrix::convertToJson(
 
 	AltitudeMatrix* pAltitude = new AltitudeMatrix();
 
+    if(dctRadius >= 0){
+        Dct::prepare();
+    }
+    
 	// Actual latitude range is between -80 to 80, so checking 'i' omit.
 	for(i=0; i<180; i++){
 		for(j=0; j<360; j++){
@@ -99,13 +105,14 @@ bool DEMMatrix::convertToJson(
 				if(demFileMatrix[i][j].fileName == ""){
 					continue;
 				}
-				if(!fullConvert && isExistOutput(outputFolder, demFileMatrix[i][j].fileName)){
-					continue;
-				}
 
-
-				if(smoothing){
-					j1 = (j == 0 ? 359 : j-1);
+				if(smoothingCount > 0){
+                    std::string smoothOutputFolder = outputFolder + "/smooth/";
+                    if(!fullConvert && isExistOutput(smoothOutputFolder, demFileMatrix[i][j].fileName)){
+                        continue;
+                    }
+                    
+                    j1 = (j == 0 ? 359 : j-1);
 					j2 = j;
 					j3 = (j == 359 ? 0 : j+1);
 
@@ -141,10 +148,17 @@ bool DEMMatrix::convertToJson(
 							demFileMatrix[i+1][j2].pTiffData->getMiniMatrix(),
 							demFileMatrix[i+1][j3].pTiffData->getMiniMatrix()
 						);
-						pAltitude->doSmoothing();
+                        if(dctRadius>=0){
+                            pAltitude->doDCT(dctRadius);
+                            pAltitude->doSmoothing(smoothingCount, true);
+                        }
+                        else{
+                            pAltitude->doSmoothing(smoothingCount);
+                        }
 						pAltitude->setBaseFile(demFileMatrix[i][j].fileName);
 						pAltitude->verify(demFileMatrix[i][j2].pTiffData->getMatrix());
-						pAltitude->writeJSON(outputFolder);
+                        pAltitude->compare();
+						pAltitude->writeJSON(smoothOutputFolder);
 					}
 
 					DELETE_POINTER(demFileMatrix[i-1][j1].pTiffData);
@@ -157,12 +171,33 @@ bool DEMMatrix::convertToJson(
 					DELETE_POINTER(demFileMatrix[i][j3].pTiffData);
 					DELETE_POINTER(demFileMatrix[i+1][j3].pTiffData);
 				}
+                else if(dctRadius >= 0){
+                    std::string dctOutputFolder = outputFolder + "/dct/";
+                    if(!fullConvert && isExistOutput(dctOutputFolder, demFileMatrix[i][j].fileName)){
+                        continue;
+                    }
+
+                    if(Unzip(inputFolder, demFileMatrix[i][j].fileName, tempFolder)){
+						TIF(demFileMatrix[i][j]);
+						pAltitude->setDEMMatrix(demFileMatrix[i][j].pTiffData->getMiniMatrix());
+                        pAltitude->doDCT(dctRadius);
+                        pAltitude->compare();
+						pAltitude->setBaseFile(demFileMatrix[i][j].fileName);
+                        pAltitude->writeJSON(dctOutputFolder);
+						DELETE_POINTER(demFileMatrix[i][j].pTiffData);
+					}
+                }
 				else{
+                    std::string originalOutputFolder = outputFolder + "/org/";
+                    if(!fullConvert && isExistOutput(originalOutputFolder, demFileMatrix[i][j].fileName)){
+                        continue;
+                    }
+
 					if(Unzip(inputFolder, demFileMatrix[i][j].fileName, tempFolder)){
 						TIF(demFileMatrix[i][j]);
 						pAltitude->setDEMMatrix(demFileMatrix[i][j].pTiffData->getMiniMatrix());
 						pAltitude->setBaseFile(demFileMatrix[i][j].fileName);
-						pAltitude->writeJSON(outputFolder);
+						pAltitude->writeJSON(originalOutputFolder);
 						DELETE_POINTER(demFileMatrix[i][j].pTiffData);
 					}
 				}
@@ -229,7 +264,7 @@ bool DEMMatrix::Unzip(
 	if(demFile == ""){
 		return false;
 	}
-	if(stricmp(demFile.substr(demFile.length()-3, 3).c_str(), "ZIP") != 0){
+	if(strcmp(demFile.substr(demFile.length()-3, 3).c_str(), "ZIP") != 0){
 		return false;
 	}
 

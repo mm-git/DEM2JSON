@@ -27,8 +27,9 @@ int main(int argc, char* argv[])
 		pDEM->convertToJson(
 			pParam->getInputPath(),
 			pParam->getOutputPath(),
-			pParam->isSmoothing(),
-			pParam->isFullConvert());
+			pParam->getSmoothingCount(),
+            pParam->getDCTRadius(),
+			pParam->isFullConvert());		
 		pDEM->writeArea(pParam->getOutputPath());
 		
 		delete pDEM;
